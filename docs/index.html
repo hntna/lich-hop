@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trợ lý Lịch họp — bản web</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="gate">
+  <div class="box">
+    <h1>🔒 Trợ lý Lịch họp</h1>
+    <p class="sub">Dữ liệu được mã hoá — nhập mật khẩu để mở (không lưu trên GitHub).</p>
+    <input type="password" id="gatePw" placeholder="Mật khẩu" autocomplete="current-password">
+    <div class="row">
+      <label><input type="checkbox" id="gateRemember" checked> Nhớ trong phiên này</label>
+      <button id="gateGo">Mở lịch</button>
+    </div>
+    <div id="gateErr"></div>
+  </div>
+</div>
+
+<header id="topbar" style="display:none">
+  <span class="logo">📅 Trợ lý Lịch họp</span>
+  <span class="week">
+    <button id="wkThis">Tuần này</button>
+    <button id="wkNext">Tuần sau</button>
+  </span>
+  <span id="weekLabel" style="color:var(--muted);font-size:13px"></span>
+  <span class="meta">
+    <span id="updatedAt"></span>
+    <button id="reload">↻ Tải lại</button>
+  </span>
+</header>
+
+<div class="tabs" id="tabs" style="display:none">
+  <button data-tab="week" class="on">Lịch tuần</button>
+  <button data-tab="find">Tìm khung giờ</button>
+</div>
+
+<div id="missBox" style="padding:0 16px"></div>
+
+<div id="viewWeek" style="display:none">
+  <div class="filters">
+    <label><input type="checkbox" id="fWorkdays" checked> Chỉ ngày làm việc</label>
+    <label><input type="checkbox" id="fHideEmpty" checked> Ẩn hàng không có lịch</label>
+    <span style="color:var(--muted);font-size:12px">Bấm tên để ẩn/hiện từng người</span>
+  </div>
+  <div class="chips" id="weekChips"></div>
+  <main><div id="weekGrid"></div></main>
+</div>
+
+<div id="viewFind" style="display:none">
+  <div class="chips" id="findChips"></div>
+  <div class="filters">
+    <label>Tối thiểu <input type="number" id="fMin" value="60" min="15" step="15" style="width:64px"> phút</label>
+    <label><input type="checkbox" id="fVc"> Chỉ cần phòng có CTH</label>
+    <label><input type="checkbox" id="fChair"> Chỉ khung giờ khi là Chủ trì</label>
+    <label>Lọc phòng <input type="text" id="fRoom" placeholder="vd TCT VTNet" style="width:150px"></label>
+    <button id="findBtn" style="background:var(--accent);color:#fff;border:0;border-radius:8px;padding:7px 16px;cursor:pointer">Tìm</button>
+  </div>
+  <main><div id="findOut"><div class="empty">Chọn thành phần rồi bấm <b>Tìm</b>.</div></div></main>
+</div>
+
+<div id="modal" style="display:none"><div class="box" id="modalBox"></div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
