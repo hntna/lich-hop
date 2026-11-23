@@ -96,6 +96,8 @@ function renderAll() {
 }
 
 /* ---------------- Lịch tuần ---------------- */
+const isMobile = () => window.matchMedia("(max-width: 760px)").matches;
+
 function renderWeekChips() {
   const box = $("#weekChips");
   box.innerHTML = "";
@@ -131,6 +133,7 @@ function fmtDay(d) {
 }
 
 function renderWeek() {
+  if (isMobile()) return renderWeekMobile();
   const grid = $("#weekGrid");
   const days = dayCols();
   const people = (state.data.people || []).filter((p) => state.visible.has(p.username));
@@ -157,7 +160,9 @@ function renderWeek() {
   hi = Math.min(24 * 60, Math.ceil(hi / 60) * 60);
   const span = hi - lo;
 
-  let html = `<div class="grid-wrap"><div class="grid" style="grid-template-columns:170px repeat(${days.length}, minmax(140px, 1fr))">`;
+  const colw = window.innerWidth <= 1024 ? 108 : 140;
+  const namew = window.innerWidth <= 1024 ? 118 : 170;
+  let html = `<div class="grid-wrap"><div class="grid" style="grid-template-columns:${namew}px repeat(${days.length}, minmax(${colw}px, 1fr))">`;
   html += `<div class="g-head"><b>Thành phần</b></div>`;
   days.forEach((d) => { html += `<div class="g-head"><b>${fmtDay(d)}</b></div>`; });
 
@@ -198,6 +203,54 @@ function renderWeek() {
     if (ms[mi]) openModal(ms[mi]);
   }));
 }
+
+/* Lịch tuần mobile: danh sách theo ngày, mỗi dòng 1 cuộc họp */
+function renderWeekMobile() {
+  const grid = $("#weekGrid");
+  const days = dayCols();
+  const people = (state.data.people || []).filter((p) => state.visible.has(p.username));
+  if (!people.length) { grid.innerHTML = `<div class="empty">Không có ai đang hiển thị — bấm tên ở trên để chọn.</div>`; return; }
+  const schedules = state.data.schedules || {};
+  const byDay = {};
+  people.forEach((p) => {
+    (((schedules[p.username] || {})[state.week]) || []).forEach((m) => {
+      if (!days.includes(m.date)) return;
+      (byDay[m.date] = byDay[m.date] || []).push({ m, p });
+    });
+  });
+  const dates = days.filter((d) => (byDay[d] || []).length);
+  if (!dates.length) { grid.innerHTML = `<div class="empty">Không ai có lịch họp trong khoảng đang xem.</div>`; return; }
+  let html = "";
+  dates.forEach((d) => {
+    html += `<div class="day-block"><h3>${fmtDay(d)}</h3>`;
+    byDay[d].sort((a, b) => a.m.start_min - b.m.start_min).forEach(({ m, p }) => {
+      html += `<div class="mrow" data-uid="${esc(p.username)}" data-date="${m.date}" data-s="${m.start_min}" data-e="${m.end_min}" data-t="${esc(m.title)}">
+        <span class="dot" style="background:${colorOf(p.username)}"></span>
+        <span class="mt">${m.start}–${m.end}</span>
+        <span class="mtitle">${esc(m.title)}${m.pending ? ' <span class="badge pend">chờ duyệt</span>' : ""}</span>
+        <span class="mp">@${esc(p.username)}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  grid.innerHTML = html;
+  $$("#weekGrid .mrow").forEach((el) => el.addEventListener("click", () => {
+    const ms = (((schedules[el.dataset.uid] || {})[state.week]) || []);
+    const m = ms.find((x) => x.date === el.dataset.date && x.start_min === +el.dataset.s
+      && x.end_min === +el.dataset.e && x.title === el.dataset.t);
+    if (m) openModal(m);
+  }));
+}
+
+/* xoay màn hình / resize qua ngưỡng → dựng lại đúng bố cục */
+let _lastMobile = isMobile();
+window.addEventListener("resize", () => {
+  clearTimeout(window._rzT);
+  window._rzT = setTimeout(() => {
+    const m = isMobile();
+    if (m !== _lastMobile && state.data) { _lastMobile = m; renderAll(); }
+  }, 200);
+});
 
 /* ---------------- modal chi tiết ---------------- */
 function openModal(m) {
