@@ -290,7 +290,8 @@ $("#findBtn").addEventListener("click", () => {
   const wk = state.data.weeks[state.week];
   const windows = (cfg.work_windows || [["08:00", "12:00"], ["13:30", "17:30"]]).map(([a, b]) => [toMin(a), toMin(b)]);
   const searchDows = new Set(cfg.search_days || [1, 2, 3, 4, 5]);
-  const days = wk.dates.filter((d) => searchDows.has(new Date(d + "T00:00:00").getDay()));
+  const todayIso = new Date().toLocaleDateString("sv"); // YYYY-MM-DD theo giờ máy
+  const days = wk.dates.filter((d) => searchDows.has(new Date(d + "T00:00:00").getDay()) && d >= todayIso);
 
   const schedules = state.data.schedules || {};
   const people = (state.data.people || []).filter((p) => sel.includes(p.username));
