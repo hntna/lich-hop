@@ -102,10 +102,44 @@ function renderAll() {
 /* ---------------- Lịch tuần ---------------- */
 const isMobile = () => window.matchMedia("(max-width: 760px)").matches;
 
+/* Thứ tự người theo dõi: người dùng có thể kéo-thả chip để đổi (lưu localStorage) */
+function loadOrder() {
+  try { return JSON.parse(localStorage.getItem("mpweb_order") || "[]"); } catch (e) { return []; }
+}
+function orderedPeople() {
+  const order = loadOrder();
+  const rank = (u) => { const i = order.indexOf(u); return i < 0 ? 99999 : i; };
+  return [...(state.data.people || [])].sort((a, b) => rank(a.username) - rank(b.username));
+}
+function saveOrder(names) { localStorage.setItem("mpweb_order", JSON.stringify(names)); }
+function makeChipDraggable(el, username) {
+  el.draggable = true;
+  el.title = "Bấm để ẩn/hiện · kéo để đổi thứ tự";
+  el.addEventListener("dragstart", (e) => {
+    e.dataTransfer.setData("text/plain", username);
+    e.dataTransfer.effectAllowed = "move";
+    el.classList.add("dragging");
+  });
+  el.addEventListener("dragend", () => el.classList.remove("dragging"));
+  el.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; el.classList.add("over"); });
+  el.addEventListener("dragleave", () => el.classList.remove("over"));
+  el.addEventListener("drop", (e) => {
+    e.preventDefault(); el.classList.remove("over");
+    const src = e.dataTransfer.getData("text/plain");
+    if (!src || src === username) return;
+    const names = orderedPeople().map((p) => p.username);
+    const from = names.indexOf(src), to = names.indexOf(username);
+    if (from < 0 || to < 0) return;
+    names.splice(to, 0, names.splice(from, 1)[0]);
+    saveOrder(names);
+    renderAll();
+  });
+}
+
 function renderWeekChips() {
   const box = $("#weekChips");
   box.innerHTML = "";
-  (state.data.people || []).forEach((p) => {
+  orderedPeople().forEach((p) => {
     const c = document.createElement("span");
     c.className = "chip" + (state.visible.has(p.username) ? "" : " off");
     c.innerHTML = `<span class="dot" style="background:${colorOf(p.username)}"></span>${esc(p.name)} <span style="color:var(--muted)">@${esc(p.username)}</span>`;
@@ -113,6 +147,7 @@ function renderWeekChips() {
       state.visible.has(p.username) ? state.visible.delete(p.username) : state.visible.add(p.username);
       renderAll();
     });
+    makeChipDraggable(c, p.username);
     box.appendChild(c);
   });
   const mini = document.createElement("span");
@@ -140,7 +175,7 @@ function renderWeek() {
   if (isMobile()) return renderWeekMobile();
   const grid = $("#weekGrid");
   const days = dayCols();
-  const people = (state.data.people || []).filter((p) => state.visible.has(p.username));
+  const people = orderedPeople().filter((p) => state.visible.has(p.username));
   if (!people.length) { grid.innerHTML = `<div class="empty">Không có ai đang hiển thị — bấm tên ở trên để chọn.</div>`; return; }
 
   const schedules = state.data.schedules || {};
@@ -212,7 +247,7 @@ function renderWeek() {
 function renderWeekMobile() {
   const grid = $("#weekGrid");
   const days = dayCols();
-  const people = (state.data.people || []).filter((p) => state.visible.has(p.username));
+  const people = orderedPeople().filter((p) => state.visible.has(p.username));
   if (!people.length) { grid.innerHTML = `<div class="empty">Không có ai đang hiển thị — bấm tên ở trên để chọn.</div>`; return; }
   const schedules = state.data.schedules || {};
   const byDay = {};
@@ -280,7 +315,7 @@ $("#modal").addEventListener("click", (e) => { if (e.target.id === "modal") $("#
 function renderFindChips() {
   const box = $("#findChips");
   box.innerHTML = "";
-  (state.data.people || []).forEach((p) => {
+  orderedPeople().forEach((p) => {
     const c = document.createElement("label");
     c.className = "chip" + (state.findSel.has(p.username) ? "" : " off");
     c.innerHTML = `<input type="checkbox" ${state.findSel.has(p.username) ? "checked" : ""}>
@@ -289,6 +324,7 @@ function renderFindChips() {
       e.target.checked ? state.findSel.add(p.username) : state.findSel.delete(p.username);
       c.classList.toggle("off", !e.target.checked);
     });
+    makeChipDraggable(c, p.username);
     box.appendChild(c);
   });
   const mini = document.createElement("span");
@@ -353,7 +389,7 @@ $("#findBtn").addEventListener("click", () => {
   const days = wk.dates.filter((d) => searchDows.has(new Date(d + "T00:00:00").getDay()) && d >= todayIso);
 
   const schedules = state.data.schedules || {};
-  const people = (state.data.people || []).filter((p) => sel.includes(p.username));
+  const people = orderedPeople().filter((p) => sel.includes(p.username));
   let roomsAll = Object.entries((state.data.rooms || {})[state.week] || {});
   if (rf) roomsAll = roomsAll.filter(([name]) => name.toLowerCase().includes(rf));
   if (vcOnly) {
