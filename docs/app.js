@@ -82,6 +82,10 @@ $("#fWorkdays").addEventListener("change", (e) => { state.workdaysOnly = e.targe
 $("#fHideEmpty").addEventListener("change", (e) => { state.hideEmpty = e.target.checked; renderWeek(); });
 
 function renderAll() {
+  // mở đúng view theo tab (không phụ thuộc việc user có bấm tab hay không —
+  // bug cũ: #viewWeek display:none sẵn trong HTML → lần tải đầu trang trắng)
+  $("#viewWeek").style.display = state.tab === "week" ? "" : "none";
+  $("#viewFind").style.display = state.tab === "find" ? "" : "none";
   const miss = state.data.missing || [];
   $("#missBox").innerHTML = miss.length
     ? `<div class="notice">⚠ Lịch chưa lấy được cho: ${esc(miss.join(", "))} — trong app nội bộ, tra cứu xong những người này rồi bấm <b>Lên GitHub</b> để đẩy lại.</div>`
@@ -325,7 +329,7 @@ function renderFind() {
   res.days.forEach((d) => {
     html += `<div class="day-block"><h3>${fmtDay(d.date)}</h3>`;
     d.slots.forEach((s) => {
-      html += `<div class="slot"><span class="t">${s.start} – ${s.end}</span><span class="t" style="color:var(--muted);font-weight:400">${Math.round((s.end_min - s.start_min) / 6) / 10}g</span><span class="rooms">`;
+      html += `<div class="slot"><span class="t">${s.start} – ${s.end}</span><span class="t" style="color:var(--muted);font-weight:400">${Math.round((s.end_min - s.start_min) / 6) / 10} giờ</span><span class="rooms">`;
       s.rooms.forEach((r) => { html += `<span class="room ${r.vc ? "vc" : ""}">${r.vc ? "📺" : "🚪"} ${esc(r.name)}${r.code ? ` <code>${esc(r.code)}</code>` : ""}</span>`; });
       html += `</span></div>`;
     });
