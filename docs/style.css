@@ -70,6 +70,43 @@ main { padding: 12px 16px 40px; }
 .room { border: 1px solid var(--border); border-radius: 14px; padding: 2px 10px; font-size: 12px; background: #fafbfc; }
 .room.vc { border-color: #c9e3d2; background: #f0f9f3; }
 
+/* ---------- responsive (mobile) ---------- */
+@media (max-width: 760px) {
+  header { padding: 8px 10px; gap: 8px; }
+  header .logo { font-size: 14px; }
+  header .week button { padding: 6px 10px; font-size: 12.5px; }
+  #weekLabel { width: 100%; order: 5; font-size: 12px; }
+  header .meta { margin-left: 0; font-size: 12px; gap: 8px; }
+  .tabs { padding: 6px 10px 0; }
+  .tabs button { flex: 1; text-align: center; padding: 9px 6px; }
+  .chips { flex-wrap: nowrap; overflow-x: auto; padding: 8px 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex: 0 0 auto; padding: 5px 10px 5px 8px; font-size: 12.5px; }
+  .chips .mini { margin-left: 4px; flex: 0 0 auto; }
+  .filters { padding: 8px 10px; gap: 10px; }
+  main { padding: 10px 10px 32px; }
+  #missBox { padding: 0 10px; }
+  .day-block { padding: 10px 12px; }
+  /* hàng cuộc họp kiểu danh sách (Lịch tuần mobile) */
+  .mrow { display: flex; gap: 8px; align-items: baseline; padding: 9px 0; border-top: 1px dashed var(--border); cursor: pointer; }
+  .mrow:first-of-type { border-top: 0; }
+  .mrow .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; align-self: center; }
+  .mrow .mt { font-weight: 700; color: var(--accent); white-space: nowrap; font-size: 12.5px; }
+  .mrow .mtitle { flex: 1; font-size: 13px; min-width: 0; overflow-wrap: anywhere; }
+  .mrow .mp { color: var(--muted); font-size: 11px; flex: 0 0 auto; }
+  .slot { flex-direction: column; gap: 4px; align-items: flex-start; }
+  .slot .t { min-width: 0; }
+  .slot .rooms { width: 100%; }
+  #modal .box { padding: 14px 16px; width: 94vw; max-height: 86vh; }
+  #modal .kv { font-size: 13px; }
+}
+
+/* ---------- tablet: cột lịch hẹp hơn ---------- */
+@media (max-width: 1024px) and (min-width: 761px) {
+  header { padding: 10px 12px; gap: 10px; }
+  main { padding: 12px 12px 40px; }
+}
+
 /* ---------- modal ---------- */
 #modal { position: fixed; inset: 0; background: rgba(20,22,26,.45); display: flex; align-items: center; justify-content: center; z-index: 40; }
 #modal .box { background: #fff; border-radius: 12px; width: min(92vw, 560px); max-height: 84vh; overflow: auto; padding: 18px 20px; }
