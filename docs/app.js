@@ -264,9 +264,11 @@ function renderFind() {
   const out = $("#findOut");
   if (!state.findResult) return;
   const res = state.findResult;
-  if (res.note) { out.innerHTML = `<div class="notice">${esc(res.note)}</div>`; return; }
-  if (!res.days || !res.days.length) { out.innerHTML = `<div class="empty">Không tìm thấy khung giờ nào phù hợp.</div>`; return; }
-  let html = "";
+  let html = res.note ? `<div class="notice">${esc(res.note)}</div>` : "";
+  if (!res.days || !res.days.length) {
+    out.innerHTML = html + `<div class="empty">Không tìm thấy khung giờ nào phù hợp.</div>`;
+    return;
+  }
   res.days.forEach((d) => {
     html += `<div class="day-block"><h3>${fmtDay(d.date)}</h3>`;
     d.slots.forEach((s) => {
@@ -368,5 +370,8 @@ $("#findBtn").addEventListener("click", () => {
     if (daySlots.length) outDays.push({ date, slots: daySlots });
   }
   state.findResult = { days: outDays };
+  if ((state.data.rooms_error || []).includes(state.week)) {
+    state.findResult.note = "⚠ Chưa có dữ liệu phòng trống cho tuần đang xem — trong app nội bộ bấm Lên GitHub sau khi app đã tải xong phòng để cập nhật.";
+  }
   renderFind();
 });
