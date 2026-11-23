@@ -252,8 +252,8 @@ function subtract(free, busy) {
     const next = [];
     for (const [s, e] of out) {
       if (be <= s || bs >= e) { next.push([s, e]); continue; }
-      if (bs > s) next.push([s, Math.min(bs, e)]);
-      if (be < e) next.push([Math.max(bs, s), e]);
+      if (bs > s) next.push([s, bs]);   // phần trước cuộc họp bận
+      if (be < e) next.push([be, e]);   // phần sau (bug cũ: dùng max(bs,s) → cắt sai)
     }
     out = next;
   }
@@ -302,22 +302,35 @@ $("#findBtn").addEventListener("click", () => {
     roomsAll = roomsAll.filter(([name]) => vcSet.has(name));
   }
 
+  // phòng bị cuộc họp ĐÃ DUYỆT chiếm (rà chéo — dữ liệu phòng trống bot có thể cũ)
+  const roomBusy = {};
+  Object.values(schedules).forEach((wks) => {
+    (wks[state.week] || []).forEach((m) => {
+      if (!m.approved || !m.location) return;
+      const rm = (state.data.rooms || {})[state.week] || {};
+      const hit = Object.keys(rm).find((n) => m.location.includes(n) || n.includes(m.location));
+      if (hit) (roomBusy[m.date] = roomBusy[m.date] || {})[hit] = (roomBusy[m.date][hit] || []).concat([[m.start_min, m.end_min]]);
+    });
+  });
+
   const outDays = [];
   for (const date of days) {
-    // bận của từng người
+    // bận của từng người — CHỈ cuộc họp ĐÃ DUYỆT chặn (khớp app; pending không chặn)
     let free = windows.slice();
     for (const p of people) {
       const ms = ((schedules[p.username] || {})[state.week]) || [];
-      const busy = ms.filter((m) => m.date === date && (!chairOnly || (m.chair || "") === p.name))
+      const busy = ms.filter((m) => m.date === date && m.approved && (!chairOnly || (m.chair || "") === p.name))
         .map((m) => [m.start_min, m.end_min]);
       free = subtract(free, busy);
       if (!free.length) break;
     }
     if (!free.length) continue;
-    // giao với phòng trống
+    // giao với phòng trống (đã trừ khung cuộc họp đã duyệt chiếm phòng đó)
     const slots = [];
     for (const [name, perDate] of roomsAll) {
-      const ivs = perDate[date] || [];
+      let ivs = perDate[date] || [];
+      const rb = (roomBusy[date] || {})[name];
+      if (rb && rb.length) ivs = subtract(ivs, rb);
       for (const [rs, re] of ivs) {
         for (const [fs, fe] of free) {
           const s = Math.max(rs, fs), e = Math.min(re, fe);
