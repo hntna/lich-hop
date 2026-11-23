@@ -152,10 +152,11 @@ function renderWeekChips() {
   });
   const mini = document.createElement("span");
   mini.className = "mini";
-  mini.innerHTML = `<button id="allOn">👁 Chọn hết</button><button id="allOff">Bỏ hết</button>`;
+  mini.innerHTML = `<button id="allOn">👁 Chọn hết</button><button id="allOff">Bỏ hết</button><button id="ordReset" title="Bỏ thứ tự tự chỉnh, trở lại thứ tự mặc định (theo app)">⇅ Mặc định</button>`;
   box.appendChild(mini);
   $("#allOn").addEventListener("click", () => { (state.data.people || []).forEach((p) => state.visible.add(p.username)); renderAll(); });
   $("#allOff").addEventListener("click", () => { state.visible.clear(); renderAll(); });
+  $("#ordReset").addEventListener("click", () => { localStorage.removeItem("mpweb_order"); renderAll(); });
 }
 
 function dayCols() {
