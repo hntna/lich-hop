@@ -338,20 +338,33 @@ $("#findBtn").addEventListener("click", () => {
         }
       }
     }
-    // gộp: cùng khung giờ thì gom phòng
-    const byKey = new Map();
-    slots.forEach((x) => {
-      const k = x.s + ":" + x.e;
-      if (!byKey.has(k)) byKey.set(k, { start: x.s, end: x.e, rooms: [] });
-      byKey.get(k).rooms.push({ name: x.name, vc: x.vc });
-    });
-    const daySlots = Array.from(byKey.values()).sort((a, b) => a.start - b.start)
-      .map((x) => ({
-        start: `${String(Math.floor(x.start / 60)).padStart(2, "0")}:${String(x.start % 60).padStart(2, "0")}`,
-        end: `${String(Math.floor(x.end / 60)).padStart(2, "0")}:${String(x.end % 60).padStart(2, "0")}`,
-        start_min: x.start, end_min: x.end,
-        rooms: x.rooms.sort((a, b) => (b.vc - a.vc) || a.name.localeCompare(b.name)).slice(0, 8),
-      }));
+    // gộp các khung giao nhau thành khung LỚN NHẤT (khớp app): chỉ giữ interval
+    // tối đại; phòng liệt kê = phòng trống TRỌN khung đó
+    const merged = [];
+    slots.sort((a, b) => a.s - b.s || a.e - b.e);
+    for (const x of slots) {
+      const last = merged[merged.length - 1];
+      if (last && x.s <= last.e) last.e = Math.max(last.e, x.e);
+      else merged.push({ s: x.s, e: x.e });
+    }
+    const daySlots = merged
+      .map((iv) => {
+        const seen = new Set();
+        const rooms = [];
+        slots.forEach((x) => {
+          if (x.s <= iv.s && x.e >= iv.e && !seen.has(x.name)) {
+            seen.add(x.name);
+            rooms.push({ name: x.name, vc: x.vc });
+          }
+        });
+        rooms.sort((a, b) => (b.vc - a.vc) || a.name.localeCompare(b.name));
+        return {
+          start: `${String(Math.floor(iv.s / 60)).padStart(2, "0")}:${String(iv.s % 60).padStart(2, "0")}`,
+          end: `${String(Math.floor(iv.e / 60)).padStart(2, "0")}:${String(iv.e % 60).padStart(2, "0")}`,
+          start_min: iv.s, end_min: iv.e, rooms,
+        };
+      })
+      .filter((x) => x.rooms.length);   // bỏ khung không phòng nào trọn khung
     if (daySlots.length) outDays.push({ date, slots: daySlots });
   }
   state.findResult = { days: outDays };
